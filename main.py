@@ -92,7 +92,53 @@ class MainWindow(QMainWindow):
 
 
 class EditDialog(QDialog):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Update STUDENT DETAIL")
+        # height and width
+        self.setFixedWidth(300)
+        self.setFixedHeight(300)
+        # set layout
+        layout = QVBoxLayout()
+        # add name widget
+        index = main.table.currentRow()
+        # get student id
+        self.student_id = main.table.item(index, 0).text()
+        # get name of table
+        name = main.table.item(index, 1).text()
+        self.name = QLineEdit(name)
+        self.name.setPlaceholderText("enter name hear")
+        layout.addWidget(self.name)
+        # add check box
+        current_course = main.table.item(index, 2).text()
+        self.course_box = QComboBox()
+        course = ["Biology", "Science", "Math", "Psychology", "Commerce", "Physics", "Astronomy"]
+        self.course_box.addItems(course)
+        self.course_box.setCurrentText(current_course)
+        layout.addWidget(self.course_box)
+        # Add mobile box
+        mobile = main.table.item(index, 3).text()
+        self.mobile = QLineEdit(mobile)
+        self.mobile.setPlaceholderText("enter mobile number hear")
+        layout.addWidget(self.mobile)
+
+        # add button
+        submit = QPushButton("update")
+        submit.clicked.connect(self.update_student_data)
+        layout.addWidget(submit)
+        # add all widget to box layout
+        self.setLayout(layout)
+
+    def update_student_data(self):
+        connection = sqlite3.connect("database.db")
+        cursor = connection.cursor()
+        cursor.execute("UPDATE students SET name =?,course = ?, mobile = ? where id =?",
+                       (self.name.text(), self.course_box.itemText(self.course_box.currentIndex()),
+                        self.mobile.text(), self.student_id))
+        connection.commit()
+        cursor.close()
+        connection.close()
+        main.load_table()
 
 
 class DeleteDialog(QDialog):
