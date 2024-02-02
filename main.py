@@ -1,19 +1,25 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout, QStatusBar, \
-    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QVBoxLayout, QComboBox, QToolBar,\
+    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QVBoxLayout, QComboBox, QToolBar, \
     QMessageBox
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtCore import Qt
 import sys
 import sqlite3
+import mysql.connector
+from mysql.connector.errors import IntegrityError as ie
+
 
 class ConnectDatabase():
-    def __init__(self, database_file="database.db"):
-        self.database = database_file
+    def __init__(self, host="localhost", user="root", password="9801333508", database="student_info"):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
 
     def connection_database(self):
-        connection = sqlite3.connect(self.database)
+        connection = mysql.connector.connect(host=self.host, user=self.user, password=self.password,
+                                             database=self.database)
         return connection
-
 
 
 class MainWindow(QMainWindow):
@@ -74,9 +80,12 @@ class MainWindow(QMainWindow):
 
         self.status_bar.addWidget(edit_button)
         self.status_bar.addWidget(delete_button)
+
     def load_table(self):
         connection = ConnectDatabase().connection_database()
-        result = connection.execute("SELECT * FROM Students")
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM students")
+        result = cursor.fetchall()
         self.table.setRowCount(0)
         for row_number, data in enumerate(result):
             self.table.insertRow(row_number)
@@ -106,7 +115,6 @@ class MainWindow(QMainWindow):
         about.exec()
 
 
-
 class AboutStudent(QMessageBox):
     def __init__(self):
         super().__init__()
@@ -117,6 +125,7 @@ class AboutStudent(QMessageBox):
         """
         self.setText(about_student)
         self.exec()
+
 
 class EditDialog(QDialog):
     def __init__(self):
@@ -159,7 +168,7 @@ class EditDialog(QDialog):
     def update_student_data(self):
         connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
-        cursor.execute("UPDATE students SET name =?,course = ?, mobile = ? where id =?",
+        cursor.execute("UPDATE students SET name =%s,course = %s, mobile = %s where id =%s",
                        (self.name.text(), self.course_box.itemText(self.course_box.currentIndex()),
                         self.mobile.text(), self.student_id))
         connection.commit()
@@ -191,7 +200,7 @@ class DeleteDialog(QDialog):
         id = main.table.item(index, 0).text()
         connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
-        cursor.execute("DELETE FROM students where id =?", (id,))
+        cursor.execute("DELETE FROM students where id =%s", (id,))
         connection.commit()
         cursor.close()
         connection.close()
@@ -241,12 +250,17 @@ class InsertDialog(QDialog):
         name = self.name.text()
         course = self.course_box.itemText(self.course_box.currentIndex())
         mobile = self.mobile.text()
-
-        cursor.execute("INSERT INTO students (name,course,mobile) VALUES(?,?,?)",
-                       (name, course, mobile))
-        connection.commit()
-        connection.close()
-        main.load_table()
+        try:
+            cursor.execute("INSERT INTO students (name,course,mobile) VALUES(%s,%s,%s)",
+                           (name, course, mobile))
+            connection.commit()
+            connection.close()
+            main.load_table()
+        except ie:
+            warning_box = QMessageBox()
+            warning_box.setWindowTitle("Warning")
+            warning_box.setText("you enter duplicate data")
+            warning_box.exec()
 
 
 class SearchDialog(QDialog):
@@ -278,7 +292,6 @@ class SearchDialog(QDialog):
         connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
         name = self.search_name.text()
-        result = cursor.execute("SELECT * FROM students WHERE name= ?", (name,))
         items = main.table.findItems(name, Qt.MatchFlag.MatchFixedString)
         if items.__len__() == 0:
             self.error_display.setText("match not found..")
