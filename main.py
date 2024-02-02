@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout, \
+from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout, QStatusBar, \
     QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QVBoxLayout, QComboBox, QToolBar
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtCore import Qt
@@ -43,7 +43,22 @@ class MainWindow(QMainWindow):
         self.table.setHorizontalHeaderLabels(("Id", "Name", "Course", "Mobile"))
         self.table.verticalHeader().setVisible(False)
         self.setCentralWidget(self.table)
+        # add status bar
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
 
+        # delete a cell
+        self.table.cellClicked.connect(self.cell_clicked)
+
+    def cell_clicked(self):
+        edit_button = QPushButton("edit button")
+        edit_button.clicked.connect(self.edit)
+
+        delete_button = QPushButton("delete button")
+        delete_button.clicked.connect(self.delete)
+
+        self.status_bar.addWidget(edit_button)
+        self.status_bar.addWidget(delete_button)
     def load_table(self):
         connection = sqlite3.connect("database.db")
         result = connection.execute("SELECT * FROM Students")
@@ -62,6 +77,22 @@ class MainWindow(QMainWindow):
     def search(self):
         search = SearchDialog()
         search.exec()
+
+    def edit(self):
+        edit = EditDialog()
+        edit.exec()
+
+    def delete(self):
+        delete = DeleteDialog()
+        delete.exec()
+
+
+class EditDialog(QDialog):
+    pass
+
+
+class DeleteDialog(QDialog):
+    pass
 
 
 class InsertDialog(QDialog):
