@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout, \
-    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QVBoxLayout, QComboBox
-from PyQt6.QtGui import QAction
+    QLineEdit, QPushButton, QMainWindow, QTableWidget, QTableWidgetItem, QDialog, QVBoxLayout, QComboBox, QToolBar
+from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtCore import Qt
 import sys
 import sqlite3
@@ -11,12 +11,13 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Student Management System")
+        self.setMinimumSize(600, 600)
 
         file_menu_item = self.menuBar().addMenu("&File")
         help_menu_item = self.menuBar().addMenu("&Help")
         edit_menu_item = self.menuBar().addMenu("&Edit")
 
-        add_student_action = QAction("Add Student", self)
+        add_student_action = QAction(QIcon("icons/add.png"), "Add Student", self)
         add_student_action.triggered.connect(self.insert)
         file_menu_item.addAction(add_student_action)
 
@@ -25,9 +26,17 @@ class MainWindow(QMainWindow):
         about_action.setMenuRole(QAction.MenuRole.NoRole)
 
         # search functionality
-        edit_action = QAction("Search", self)
+        edit_action = QAction(QIcon("icons/search.png"), "Search", self)
         edit_action.triggered.connect(self.search)
         edit_menu_item.addAction(edit_action)
+
+        # add toolbar
+        tool_bar = QToolBar()
+        tool_bar.setMovable(True)
+        self.addToolBar(tool_bar)
+
+        tool_bar.addAction(add_student_action)
+        tool_bar.addAction(edit_action)
 
         self.table = QTableWidget()
         self.table.setColumnCount(4)
