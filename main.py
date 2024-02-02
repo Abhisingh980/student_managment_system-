@@ -6,6 +6,15 @@ from PyQt6.QtCore import Qt
 import sys
 import sqlite3
 
+class ConnectDatabase():
+    def __init__(self, database_file="database.db"):
+        self.database = database_file
+
+    def connection_database(self):
+        connection = sqlite3.connect(self.database)
+        return connection
+
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -66,7 +75,7 @@ class MainWindow(QMainWindow):
         self.status_bar.addWidget(edit_button)
         self.status_bar.addWidget(delete_button)
     def load_table(self):
-        connection = sqlite3.connect("database.db")
+        connection = ConnectDatabase().connection_database()
         result = connection.execute("SELECT * FROM Students")
         self.table.setRowCount(0)
         for row_number, data in enumerate(result):
@@ -148,7 +157,7 @@ class EditDialog(QDialog):
         self.setLayout(layout)
 
     def update_student_data(self):
-        connection = sqlite3.connect("database.db")
+        connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
         cursor.execute("UPDATE students SET name =?,course = ?, mobile = ? where id =?",
                        (self.name.text(), self.course_box.itemText(self.course_box.currentIndex()),
@@ -180,7 +189,7 @@ class DeleteDialog(QDialog):
     def delete_student(self):
         index = main.table.currentRow()
         id = main.table.item(index, 0).text()
-        connection = sqlite3.connect("database.db")
+        connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
         cursor.execute("DELETE FROM students where id =?", (id,))
         connection.commit()
@@ -227,7 +236,7 @@ class InsertDialog(QDialog):
         self.setLayout(layout)
 
     def insert_data(self):
-        connection = sqlite3.connect("database.db")
+        connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
         name = self.name.text()
         course = self.course_box.itemText(self.course_box.currentIndex())
@@ -266,7 +275,7 @@ class SearchDialog(QDialog):
         self.setLayout(layout)
 
     def search(self):
-        connection = sqlite3.connect("database.db")
+        connection = ConnectDatabase().connection_database()
         cursor = connection.cursor()
         name = self.search_name.text()
         result = cursor.execute("SELECT * FROM students WHERE name= ?", (name,))
