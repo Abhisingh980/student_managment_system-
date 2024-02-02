@@ -57,6 +57,10 @@ class MainWindow(QMainWindow):
         delete_button = QPushButton("delete button")
         delete_button.clicked.connect(self.delete)
 
+        children = self.findChildren(QPushButton)
+        for child in children:
+            self.status_bar.removeWidget(child)
+
         self.status_bar.addWidget(edit_button)
         self.status_bar.addWidget(delete_button)
     def load_table(self):
