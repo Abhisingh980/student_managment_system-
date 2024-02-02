@@ -1,0 +1,1 @@
+# student management with PyQt6 
